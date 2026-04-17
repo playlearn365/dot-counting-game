@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>數點點遊戲 🌈</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FFFDF8;min-height:100dvh;display:flex;flex-direction:column;align-items:center;}
+#app{display:flex;flex-direction:column;align-items:center;padding:0.8rem 0.5rem;user-select:none;width:100%;max-width:640px;}
+
+/* ── START ── */
+#start-screen{display:flex;flex-direction:column;align-items:center;gap:12px;padding:1.2rem 1rem;text-align:center;width:100%;max-width:400px;}
+#start-screen h2{font-size:26px;font-weight:600;color:#333;}
+#start-screen p{font-size:13px;color:#888;line-height:1.6;max-width:280px;}
+.name-input-wrap input{padding:10px 14px;border-radius:14px;border:3px solid #FFD166;font-size:16px;background:#FFFDF5;color:#333;outline:none;width:100%;}
+.name-input-wrap input:focus{border-color:#FF6B6B;}
+.name-tag{display:inline-flex;align-items:center;gap:6px;background:#FFF3CD;border:2px solid #FFD166;border-radius:20px;padding:4px 12px;font-size:14px;font-weight:500;color:#B07D00;cursor:pointer;}
+.speed-row{display:flex;gap:10px;}
+.speed-btn{padding:10px 16px;border-radius:16px;font-size:14px;font-weight:500;cursor:pointer;border:3px solid #E0E0E0;background:#F5F5F5;color:#555;transition:all .15s;}
+.speed-btn:active{transform:scale(.93);}
+.speed-btn.sel-slow{background:#D4EDDA;border-color:#06D6A0;color:#0A6640;}
+.speed-btn.sel-normal{background:#FFF3CD;border-color:#FFD166;color:#B07D00;}
+.speed-btn.sel-fast{background:#FFD0D0;border-color:#FF6B6B;color:#AA2200;}
+#speed-hint{font-size:12px;color:#888;min-height:16px;}
+.big-btn{padding:13px 36px;border-radius:20px;border:3px solid #FFD166;background:#FFF3CD;font-size:18px;font-weight:600;cursor:pointer;color:#B07D00;transition:all .15s;}
+.big-btn:active{background:#FFE088;transform:scale(.96);}
+.tab-row{display:flex;border-radius:14px;overflow:hidden;border:2px solid #E0E0E0;width:100%;}
+.tab-btn{flex:1;padding:8px 0;font-size:13px;font-weight:500;cursor:pointer;border:none;background:#F5F5F5;color:#777;transition:all .15s;}
+.tab-btn.active{background:#FFF3CD;color:#B07D00;}
+.rec-table{width:100%;border-collapse:collapse;font-size:13px;}
+.rec-table th{padding:6px 8px;text-align:center;color:#888;font-weight:500;border-bottom:1.5px solid #E0E0E0;}
+.rec-table td{padding:6px 8px;text-align:center;color:#333;border-bottom:.5px solid #F0F0F0;}
+.no-rec{font-size:13px;color:#aaa;padding:16px 0;text-align:center;}
+.clear-btn{font-size:12px;color:#aaa;background:none;border:1px solid #ddd;border-radius:8px;padding:3px 10px;cursor:pointer;margin-top:8px;}
+
+/* ── GAME ── */
+#game-screen{display:none;flex-direction:column;align-items:center;width:100%;}
+.top-bar{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:600px;margin-bottom:6px;padding:0 2px;flex-wrap:wrap;gap:4px;}
+.top-badge{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;}
+.q-badge{background:#FFF3CD;color:#B07D00;border:1.5px solid #FFD166;}
+.c-badge{background:#D4EDDA;color:#0A6640;border:1.5px solid #06D6A0;}
+.t-badge{background:#E8F4FD;color:#185FA5;border:1.5px solid #B5D4F4;}
+.n-badge{background:#F3E8FF;color:#6B3FA0;border:1.5px solid #C4A0E8;}
+#stars-row{display:flex;flex-wrap:wrap;gap:2px;max-width:600px;justify-content:center;margin-bottom:5px;}
+.star{font-size:14px;}
+.play-area{display:flex;gap:12px;align-items:stretch;width:100%;max-width:600px;}
+.left-col{display:flex;flex-direction:column;align-items:center;flex:1;}
+#flash-box{width:100%;flex:1;min-height:210px;border-radius:24px;background:linear-gradient(135deg,#FFF9F0,#F0F4FF);border:3px solid #FFD166;position:relative;overflow:hidden;margin-bottom:6px;}
+.dot{border-radius:50%;position:absolute;}
+#timer-bar-wrap{width:100%;height:10px;background:#F0F0F0;border-radius:10px;overflow:hidden;margin-bottom:5px;}
+#timer-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,#06D6A0,#FFD166);transition:width linear;}
+#question-label{font-size:14px;color:#888;text-align:center;min-height:20px;}
+.right-col{display:flex;flex-direction:column;justify-content:center;}
+#num-pad{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.num-btn{width:60px;height:60px;border-radius:18px;border:3px solid transparent;font-size:28px;font-weight:600;cursor:pointer;transition:transform .12s;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
+.num-btn:active{transform:scale(.84);}
+.num-btn.correct-flash{outline:4px solid #06D6A0;}
+.num-btn.wrong-flash{outline:4px solid #FF6B6B;opacity:.6;}
+
+/* ── RESULT ── */
+#result-screen{display:none;flex-direction:column;align-items:center;padding:1rem;text-align:center;gap:8px;}
+#result-screen.show{display:flex;}
+#result-screen h2{font-size:24px;font-weight:600;color:#333;}
+#result-stars{font-size:34px;letter-spacing:4px;}
+.result-stats{display:flex;gap:10px;margin:4px 0;flex-wrap:wrap;justify-content:center;}
+.stat-card{border-radius:14px;padding:7px 16px;text-align:center;border:2px solid;}
+.s1{background:#D4EDDA;border-color:#06D6A0;}
+.s2{background:#E8F4FD;border-color:#B5D4F4;}
+.s3{background:#FFF3CD;border-color:#FFD166;}
+.stat-label{font-size:11px;color:#888;}
+.stat-val{font-size:18px;font-weight:600;color:#333;}
+#result-msg{font-size:14px;color:#888;}
+.result-btns{display:flex;gap:10px;margin-top:6px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- START -->
+  <div id="start-screen">
+    <div style="font-size:60px;line-height:1;">🌈</div>
+    <h2>數點點遊戲</h2>
+    <p>看清楚閃卡上的彩色圓點<br>快速點選正確的數字！共 15 題</p>
+    <div style="font-size:13px;color:#888;font-weight:500;align-self:flex-start;">小朋友的名字</div>
+    <div class="name-input-wrap"><input id="name-input" type="text" placeholder="輸入名字…" maxlength="10" oninput="currentName=this.value.trim()"/></div>
+    <div id="saved-names-row" style="display:flex;flex-wrap:wrap;gap:6px;width:100%;min-height:10px;"></div>
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-game" onclick="showTab('game')">🎮 開始遊戲</button>
+      <button class="tab-btn" id="tab-rec" onclick="showTab('rec')">📋 遊戲紀錄</button>
+    </div>
+    <div id="panel-game" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;">
+      <div style="font-size:13px;color:#888;font-weight:500;">選擇速度（預設：慢）</div>
+      <div class="speed-row">
+        <button class="speed-btn sel-slow" id="btn-slow" onclick="selectSpeed('slow')">🐢 慢</button>
+        <button class="speed-btn" id="btn-normal" onclick="selectSpeed('normal')">🐇 一般</button>
+        <button class="speed-btn" id="btn-fast" onclick="selectSpeed('fast')">🚀 快</button>
+      </div>
+      <div id="speed-hint">5 秒 → 3 秒，適合剛開始的小朋友</div>
+      <button class="big-btn" onclick="startGame()">開始遊戲 ▶</button>
+    </div>
+    <div id="panel-rec" style="width:100%;display:none;"><div id="records-panel"></div></div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game-screen">
+    <div class="top-bar">
+      <span class="top-badge n-badge" id="name-badge">👤</span>
+      <span class="top-badge q-badge" id="q-counter">1 / 15</span>
+      <span class="top-badge" id="speed-badge" style="font-size:12px;font-weight:500;padding:4px 10px;border-radius:20px;"></span>
+      <span class="top-badge c-badge" id="correct-badge">答對 0</span>
+      <span class="top-badge t-badge" id="stopwatch">⏱ 0:00</span>
+    </div>
+    <div id="stars-row"></div>
+    <div class="play-area">
+      <div class="left-col">
+        <div id="flash-box"></div>
+        <div id="timer-bar-wrap"><div id="timer-bar"></div></div>
+        <div id="question-label">請選擇數字</div>
+      </div>
+      <div class="right-col"><div id="num-pad"></div></div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result-screen">
+    <div style="font-size:60px;">🎊</div>
+    <h2 id="result-title"></h2>
+    <div id="result-stars"></div>
+    <div class="result-stats">
+      <div class="stat-card s1"><div class="stat-label">答對題數</div><div class="stat-val" id="r-correct"></div></div>
+      <div class="stat-card s2"><div class="stat-label">完成時間</div><div class="stat-val" id="r-time"></div></div>
+      <div class="stat-card s3"><div class="stat-label">正確率</div><div class="stat-val" id="r-rate"></div></div>
+    </div>
+    <div id="result-msg"></div>
+    <div class="result-btns">
+      <button class="big-btn" onclick="playAgain()">再玩一次 ↺</button>
+      <button class="big-btn" style="border-color:#B5D4F4;background:#E8F4FD;color:#185FA5;" onclick="backToStart()">回首頁 🏠</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOTAL_Q=15;
+const PROFILES={
+  slow:  {start:5000,dec:143,min:3000,label:'🐢 慢速',hint:'5 秒 → 3 秒，適合剛開始的小朋友',bs:'background:#D4EDDA;color:#0A6640;border:1.5px solid #06D6A0'},
+  normal:{start:4000,dec:143,min:2000,label:'🐇 一般',hint:'4 秒 → 2 秒',bs:'background:#FFF3CD;color:#B07D00;border:1.5px solid #FFD166'},
+  fast:  {start:3000,dec:107,min:1500,label:'🚀 快速',hint:'3 秒 → 1.5 秒，挑戰用！',bs:'background:#FFD0D0;color:#AA2200;border:1.5px solid #FF6B6B'},
+};
+const SL={slow:'慢',normal:'一般',fast:'快'};
+
+// Macaron button colours: [background, border, text]
+const MAC=[
+  ['#FADADD','#F4A8B1','#7A2535'], // 玫瑰粉
+  ['#FAF0BE','#EDD96A','#6B5500'], // 奶油黃
+  ['#B5EAD7','#5FCFAA','#0F5535'], // 薄荷綠
+  ['#C7CEEA','#8896D4','#1E2E7A'], // 薰衣草
+  ['#FFD6A5','#FFAA55','#7A3800'], // 蜜桃橘
+  ['#E2C4F0','#C080DE','#4A1060'], // 丁香紫
+  ['#B5D8F7','#60A8E0','#0A3560'], // 天空藍
+  ['#FFDAC1','#FFB088','#6A2E00'], // 杏桃
+];
+
+// Dot color pairs [leftZoneColor, rightZoneColor]
+const PAIRS=[
+  ['#FF6B6B','#4ECDC4'],['#FF9F4A','#45B7D1'],['#F06292','#7BC67E'],
+  ['#BA68C8','#FFB300'],['#EF5350','#42A5F5'],['#EC407A','#26A69A'],
+  ['#FF7043','#66BB6A'],['#AB47BC','#FFA726'],
+];
+
+let selectedSpeed='slow',questionNum=0,correctTotal=0,currentAnswer=0;
+let flashTimeout=null,answered=false,currentDuration=5000;
+let swInterval=null,elapsedMs=0,gameStartTime=0,currentName='';
+
+// ── Storage ───────────────────────────────────────────────────────────────
+function loadR(){try{return JSON.parse(localStorage.getItem('dg_rec')||'[]');}catch(e){return[];}}
+function saveR(a){try{localStorage.setItem('dg_rec',JSON.stringify(a.slice(0,50)));}catch(e){}}
+function addR(r){const a=loadR();a.unshift(r);saveR(a);}
+function loadN(){try{return JSON.parse(localStorage.getItem('dg_names')||'[]');}catch(e){return[];}}
+function saveN(n){if(!n)return;let a=loadN();a=[n,...a.filter(x=>x!==n)];try{localStorage.setItem('dg_names',JSON.stringify(a.slice(0,8)));}catch(e){}}
+
+function renderNames(){
+  const row=document.getElementById('saved-names-row');row.innerHTML='';
+  loadN().forEach(n=>{
+    const t=document.createElement('div');t.className='name-tag';
+    t.innerHTML=n+' <span style="font-size:12px;opacity:.7;">▶</span>';
+    t.onclick=()=>{document.getElementById('name-input').value=n;currentName=n;};
+    row.appendChild(t);
+  });
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function showTab(t){
+  ['game','rec'].forEach(x=>{
+    document.getElementById('tab-'+x).classList.toggle('active',x===t);
+    document.getElementById('panel-'+x).style.display=x===t?(t==='game'?'flex':'block'):'none';
+  });
+  if(t==='rec')renderRec();
+}
+function renderRec(){
+  const panel=document.getElementById('records-panel');
+  const recs=loadR();
+  if(!recs.length){panel.innerHTML='<div class="no-rec">還沒有紀錄，快去玩吧！🎮</div>';return;}
+  const fn=document.getElementById('name-input').value.trim();
+  const list=fn?recs.filter(r=>r.name===fn):recs;
+  let h=`<div style="font-size:12px;color:#aaa;margin-bottom:6px;text-align:right;">${fn?`「${fn}」的紀錄`:'全部紀錄'} (${list.length} 筆)</div>`;
+  h+=`<table class="rec-table"><thead><tr><th>名字</th><th>速度</th><th>答對</th><th>正確率</th><th>時間</th><th>日期</th></tr></thead><tbody>`;
+  list.slice(0,20).forEach(r=>{h+=`<tr><td>${r.name||'—'}</td><td>${r.speed}</td><td>${r.correct}/15</td><td>${r.rate}%</td><td>${r.time}</td><td>${r.date}</td></tr>`;});
+  h+=`</tbody></table><div style="text-align:right;margin-top:6px;"><button class="clear-btn" onclick="clearRec()">清除紀錄</button></div>`;
+  panel.innerHTML=h;
+}
+function clearRec(){if(confirm('確定要清除所有紀錄嗎？')){saveR([]);renderRec();}}
+
+// ── Speed ─────────────────────────────────────────────────────────────────
+function selectSpeed(m){
+  selectedSpeed=m;
+  ['slow','normal','fast'].forEach(x=>{document.getElementById('btn-'+x).className='speed-btn'+(x===m?' sel-'+x:'');});
+  document.getElementById('speed-hint').textContent=PROFILES[m].hint;
+}
+
+// ── Num pad ───────────────────────────────────────────────────────────────
+function buildNumPad(){
+  const pad=document.getElementById('num-pad');pad.innerHTML='';
+  const sh=[...MAC].sort(()=>Math.random()-.5);
+  for(let n=2;n<=9;n++){
+    const[bg,bd,tx]=sh[n-2];
+    const b=document.createElement('button');
+    b.className='num-btn';
+    b.style.cssText=`background:${bg};border-color:${bd};color:${tx};`;
+    b.textContent=n;
+    b.onclick=()=>handleAnswer(n);
+    pad.appendChild(b);
+  }
+}
+
+// ── Game ──────────────────────────────────────────────────────────────────
+function startGame(){
+  currentName=document.getElementById('name-input').value.trim();
+  if(!currentName){alert('請先輸入小朋友的名字！');return;}
+  saveN(currentName);
+  questionNum=0;correctTotal=0;elapsedMs=0;
+  const p=PROFILES[selectedSpeed];currentDuration=p.start;
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('result-screen').classList.remove('show');
+  const gs=document.getElementById('game-screen');gs.style.display='flex';gs.style.flexDirection='column';
+  document.getElementById('name-badge').textContent='👤 '+currentName;
+  const b=document.getElementById('speed-badge');b.textContent=p.label;
+  b.style.cssText='display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;'+p.bs;
+  buildNumPad();buildStars();updateTop();
+  gameStartTime=Date.now();startSW();nextQ();
+}
+
+function startSW(){
+  clearInterval(swInterval);
+  swInterval=setInterval(()=>{elapsedMs=Date.now()-gameStartTime;document.getElementById('stopwatch').textContent='⏱ '+fmt(elapsedMs);},500);
+}
+function fmt(ms){const s=Math.floor(ms/1000),m=Math.floor(s/60);return m+':'+(s%60).toString().padStart(2,'0');}
+function buildStars(){
+  const row=document.getElementById('stars-row');row.innerHTML='';
+  for(let i=0;i<TOTAL_Q;i++){const s=document.createElement('div');s.className='star';s.id='star-'+i;s.textContent='⬜';row.appendChild(s);}
+}
+function updateTop(){
+  document.getElementById('q-counter').textContent=Math.min(questionNum+1,15)+' / 15';
+  document.getElementById('correct-badge').textContent='答對 '+correctTotal;
+}
+function setStar(i,ok){const s=document.getElementById('star-'+i);if(s)s.textContent=ok?'✅':'❌';}
+
+function nextQ(){
+  if(questionNum>=TOTAL_Q){endGame();return;}
+  answered=false;
+  const count=Math.floor(Math.random()*8)+2;
+  currentAnswer=count;updateTop();
+  showDots(count);startTimer(currentDuration);
+}
+
+// ── Dot drawing ───────────────────────────────────────────────────────────
+// Loose random scatter within a zone.
+// No grid, no alignment — each dot placed randomly with overlap prevention.
+function scatter(n,xMin,xMax,yMin,yMax,r,existing){
+  const minDist=r*2+r*0.4;
+  const pts=[];let tries=0;
+  while(pts.length<n&&tries<800){
+    tries++;
+    const x=xMin+r+Math.random()*(xMax-xMin-r*2);
+    const y=yMin+r+Math.random()*(yMax-yMin-r*2);
+    let ok=true;
+    for(const p of[...existing,...pts]){
+      if(Math.sqrt((p.x-x)**2+(p.y-y)**2)<minDist){ok=false;break;}
+    }
+    if(ok)pts.push({x,y});
+  }
+  return pts;
+}
+
+function showDots(count){
+  const box=document.getElementById('flash-box');box.innerHTML='';
+  const W=box.clientWidth||280,H=box.clientHeight||210;
+  const r=count<=3?30:count<=5?26:count<=7?22:19;
+  const pad=8;
+  const pair=PAIRS[Math.floor(Math.random()*PAIRS.length)];
+  let dots=[];
+
+  if(count>4){
+    // Two zones: left and right, each with its own solid color
+    const lN=Math.ceil(count/2),rN=count-lN;
+    const mid=W/2;
+    const lPts=scatter(lN, pad, mid-pad, pad, H-pad, r, []);
+    const rPts=scatter(rN, mid+pad, W-pad, pad, H-pad, r, lPts);
+    lPts.forEach(p=>dots.push({...p,color:pair[0]}));
+    rPts.forEach(p=>dots.push({...p,color:pair[1]}));
+  } else {
+    // Small counts: single group, loosely scattered, one color
+    const pts=scatter(count, pad, W-pad, pad, H-pad, r, []);
+    pts.forEach(p=>dots.push({...p,color:pair[0]}));
+  }
+
+  dots.forEach(({x,y,color})=>{
+    const d=document.createElement('div');d.className='dot';
+    const sz=r*2;
+    d.style.width=sz+'px';d.style.height=sz+'px';
+    d.style.left=(x-r)+'px';d.style.top=(y-r)+'px';
+    d.style.background=color;
+    box.appendChild(d);
+  });
+}
+
+// ── Timer ─────────────────────────────────────────────────────────────────
+function startTimer(dur){
+  clearTimeout(flashTimeout);
+  const bar=document.getElementById('timer-bar');
+  bar.style.transition='none';bar.style.width='100%';
+  setTimeout(()=>{bar.style.transition=`width ${dur}ms linear`;bar.style.width='0%';},30);
+  flashTimeout=setTimeout(()=>{if(!answered)timeUp();},dur);
+}
+function timeUp(){
+  answered=true;setStar(questionNum,false);
+  document.getElementById('question-label').textContent=`⏰ 時間到！答案是 ${currentAnswer}`;
+  flashBtn(currentAnswer,true);advance();
+}
+function handleAnswer(n){
+  if(answered)return;answered=true;clearTimeout(flashTimeout);
+  const ok=n===currentAnswer;if(ok)correctTotal++;
+  setStar(questionNum,ok);
+  document.getElementById('correct-badge').textContent='答對 '+correctTotal;
+  document.getElementById('question-label').textContent=ok?`✅ 答對了！是 ${currentAnswer} 個`:`❌ 答案是 ${currentAnswer} 個`;
+  if(!ok)flashBtn(n,false);
+  flashBtn(currentAnswer,true);
+  advance();
+}
+function flashBtn(n,ok){
+  document.querySelectorAll('.num-btn').forEach(b=>{
+    if(parseInt(b.textContent)===n){
+      b.classList.add(ok?'correct-flash':'wrong-flash');
+      setTimeout(()=>b.classList.remove('correct-flash','wrong-flash'),800);
+    }
+  });
+}
+function advance(){
+  questionNum++;
+  if(questionNum<TOTAL_Q){const p=PROFILES[selectedSpeed];currentDuration=Math.max(p.min,currentDuration-p.dec);}
+  setTimeout(()=>{document.getElementById('question-label').textContent='請選擇數字';nextQ();},950);
+}
+
+// ── End ───────────────────────────────────────────────────────────────────
+function endGame(){
+  clearInterval(swInterval);elapsedMs=Date.now()-gameStartTime;
+  document.getElementById('game-screen').style.display='none';
+  const rs=document.getElementById('result-screen');rs.classList.add('show');
+  const pct=correctTotal/TOTAL_Q;
+  let title,emoji,msg;
+  if(pct===1){title='完美！滿分！';emoji='🌟🌟🌟🌟🌟';msg='哇！全部都答對了！超級厲害！';}
+  else if(pct>=.8){title='超棒的！';emoji='⭐⭐⭐⭐';msg=`答對 ${correctTotal} 題，你真的很棒！`;}
+  else if(pct>=.6){title='做得很好！';emoji='⭐⭐⭐';msg=`答對 ${correctTotal} 題，繼續加油！`;}
+  else if(pct>=.4){title='繼續努力！';emoji='⭐⭐';msg=`答對 ${correctTotal} 題，多練習一定更好！`;}
+  else{title='加油加油！';emoji='⭐';msg=`答對 ${correctTotal} 題，我們再試一次吧！`;}
+  document.getElementById('result-title').textContent=currentName+' '+title;
+  document.getElementById('result-stars').textContent=emoji;
+  document.getElementById('result-msg').textContent=msg;
+  document.getElementById('r-correct').textContent=correctTotal+' / 15';
+  document.getElementById('r-time').textContent=fmt(elapsedMs);
+  document.getElementById('r-rate').textContent=Math.round(pct*100)+'%';
+  const now=new Date();
+  const dt=`${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
+  addR({name:currentName,speed:SL[selectedSpeed],correct:correctTotal,rate:Math.round(pct*100),time:fmt(elapsedMs),date:dt});
+}
+
+function playAgain(){document.getElementById('result-screen').classList.remove('show');startGame();}
+function backToStart(){
+  document.getElementById('result-screen').classList.remove('show');
+  document.getElementById('start-screen').style.display='flex';
+  renderNames();showTab('game');
+}
+
+renderNames();
+</script>
+</body>
+</html>
